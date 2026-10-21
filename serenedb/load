@@ -1,0 +1,27 @@
+#!/bin/bash
+set -eu
+
+mkdir -p data
+mv hits.parquet data/
+chmod -R 777 data
+
+# The docker image sees ./data as /data.
+if [ -n "${SERENED_BIN:-}" ]; then
+    pq="$PWD/data/hits.parquet"
+else
+    pq=/data/hits.parquet
+fi
+
+psql -h 127.0.0.1 -p 7890 -U postgres -v ON_ERROR_STOP=1 -f create.sql
+psql -h 127.0.0.1 -p 7890 -U postgres -v ON_ERROR_STOP=1 -v pq="$pq" <<'SQL'
+INSERT INTO hits
+SELECT * REPLACE (
+    make_date(EventDate) AS EventDate,
+    epoch_ms(EventTime * 1000) AS EventTime,
+    epoch_ms(ClientEventTime * 1000) AS ClientEventTime,
+    epoch_ms(LocalEventTime * 1000) AS LocalEventTime)
+FROM read_parquet(:'pq', binary_as_string=True);
+SQL
+
+rm -f data/hits.parquet
+sync

@@ -1,0 +1,23 @@
+#!/bin/bash
+set -eu
+
+if psql -h 127.0.0.1 -p 7890 -U postgres -c 'SELECT 1' >/dev/null 2>&1; then
+    exit 0
+fi
+
+mkdir -p db data
+chmod 777 db data
+
+if [ -n "${SERENED_BIN:-}" ]; then
+    nohup "$SERENED_BIN" "$PWD/db" --listen=postgres://0.0.0.0:7890 > server.log 2>&1 &
+    echo $! > server.pid
+    exit 0
+fi
+
+sudo docker run -d --name serenedb \
+    --network host \
+    -v "$PWD/db:/var/lib/serenedb" \
+    -v "$PWD/data:/data" \
+    --ulimit nofile=1048576:1048576 \
+    --ulimit memlock=-1:-1 \
+    "${SERENEDB_IMAGE:-serenedb/serenedb:latest}" >/dev/null

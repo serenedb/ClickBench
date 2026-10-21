@@ -1,0 +1,1 @@
+../serenedb/benchmark.sh

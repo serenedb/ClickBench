@@ -1,0 +1,4 @@
+#!/bin/bash
+set -eu
+
+sudo du -bcs db | grep total | awk '{print $1}'
