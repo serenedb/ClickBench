@@ -1,7 +1,6 @@
 CREATE VIEW hits AS
-SELECT * REPLACE (
-    make_date(EventDate) AS EventDate,
-    epoch_ms(EventTime * 1000) AS EventTime,
-    epoch_ms(ClientEventTime * 1000) AS ClientEventTime,
-    epoch_ms(LocalEventTime * 1000) AS LocalEventTime)
+SELECT *
+    REPLACE (make_date(EventDate) AS EventDate)
 FROM read_parquet(:'pq', binary_as_string=True);
+
+CREATE MACRO toDateTime(t) AS epoch_ms(t * 1000);
