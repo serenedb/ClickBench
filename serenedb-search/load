@@ -24,7 +24,7 @@ FROM read_parquet(:'pq', binary_as_string=True);
 SQL
 
 psql -h 127.0.0.1 -p 7890 -U postgres -v ON_ERROR_STOP=1 \
-    -c "VACUUM (REFRESH_TABLE hits)" \
+    -c "VACUUM (REFRESH_TABLE) hits" \
     -c "ALTER TABLE hits SET (compaction_interval = 0)"
 
 rm -f data/hits.parquet
