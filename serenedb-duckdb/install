@@ -1,0 +1,11 @@
+#!/bin/bash
+# SERENED_BIN runs a local serened build instead of the docker image.
+set -eu
+
+if [ -n "${SERENED_BIN:-}" ]; then
+    "$SERENED_BIN" --version >/dev/null
+    exit 0
+fi
+sudo apt-get update -y
+sudo apt-get install -y docker.io postgresql-client
+sudo docker pull "${SERENEDB_IMAGE:-serenedb/serenedb:latest}"

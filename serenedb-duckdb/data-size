@@ -1,0 +1,4 @@
+#!/bin/bash
+set -eu
+
+du -b data/hits.db | awk '{print $1}'

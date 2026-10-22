@@ -1,0 +1,28 @@
+#!/bin/bash
+set -eu
+
+if [ ! -f ../duckdb/hits.db ]; then
+    mv hits.parquet ../duckdb/
+    (cd ../duckdb && ./install && ./load)
+fi
+rm -f hits.parquet
+
+mkdir -p data
+chmod 777 data
+rm -f data/hits.db
+ln ../duckdb/hits.db data/hits.db 2>/dev/null || cp ../duckdb/hits.db data/hits.db
+chmod 644 data/hits.db
+
+# The docker image sees ./data as /data.
+if [ -n "${SERENED_BIN:-}" ]; then
+    db="$PWD/data/hits.db"
+else
+    db=/data/hits.db
+fi
+
+psql -h 127.0.0.1 -p 7890 -U postgres -v ON_ERROR_STOP=1 -v db="$db" <<'SQL'
+CREATE SERVER duckdb_hits FOREIGN DATA WRAPPER duckdb_fdw OPTIONS (path :'db', read_only 'true');
+CREATE VIEW hits AS SELECT * FROM duckdb_hits.main.hits;
+SQL
+
+sync
